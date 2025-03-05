@@ -4,20 +4,39 @@ const { validateCPF } = require('./patientService');
 /**
  * Processa mensagens do usuário com o GPT-4O
  * @param {Array} conversationHistory - Histórico de mensagens da conversa
+ * @param {Object} patientInfo - Informações do paciente (opcional)
  * @returns {Promise<string>} - Resposta gerada pelo GPT-4O
  */
-const processMessageWithGPT = async (conversationHistory) => {
+const processMessageWithGPT = async (conversationHistory, patientInfo = null) => {
   try {
     console.log('[OpenAI] Iniciando processamento de mensagem');
     
     // Formatar as mensagens para o formato esperado pela API da OpenAI
+    let systemPrompt = SYSTEM_PROMPT;
+    
+    // Adicionar informações do paciente ao prompt do sistema, se disponíveis
+    if (patientInfo) {
+      const patientContext = `
+INFORMAÇÕES DO PACIENTE:
+- Nome: ${patientInfo.name || 'Não cadastrado'}
+- CPF: ${patientInfo.cpf || 'Não cadastrado'}
+- Telefone: ${patientInfo.phone_number || 'Não cadastrado'}
+${patientInfo.last_appointment ? `- Última consulta: ${new Date(patientInfo.last_appointment).toLocaleDateString('pt-BR')}` : '- Sem consultas anteriores'}
+${patientInfo.total_appointments ? `- Total de consultas: ${patientInfo.total_appointments}` : ''}
+
+Use estas informações para personalizar o atendimento, mas não mencione ter acesso a esse histórico a menos que o paciente pergunte especificamente. Sempre trate o paciente pelo nome quando disponível.`;
+
+      systemPrompt = `${SYSTEM_PROMPT}\n\n${patientContext}`;
+      console.log('[OpenAI] Adicionadas informações do paciente ao prompt do sistema');
+    }
+    
     const messages = [
-      // Primeiro, adicionar o prompt do sistema como role "system" (não "developer")
-      { role: 'system', content: SYSTEM_PROMPT }
+      // Primeiro, adicionar o prompt do sistema
+      { role: 'system', content: systemPrompt }
     ];
 
-    // Adicionar histórico de mensagens (limitando a últimas 10 para evitar contexto muito grande)
-    const recentHistory = conversationHistory.slice(-10);
+    // Adicionar histórico de mensagens (limitando a últimas 12 para contexto mais amplo)
+    const recentHistory = conversationHistory.slice(-12);
     recentHistory.forEach(msg => {
       // Garantir que o role seja um dos valores aceitos pela API: 'system', 'user' ou 'assistant'
       let role = msg.role;
@@ -33,7 +52,7 @@ const processMessageWithGPT = async (conversationHistory) => {
 
     console.log(`[OpenAI] Preparadas ${messages.length} mensagens para envio ao GPT-4.5`);
     
-    // Configuração para a requisição - removendo parâmetros inválidos
+    // Configuração para a requisição 
     const requestConfig = {
       model: DEFAULT_MODEL_CONFIG.model,
       temperature: DEFAULT_MODEL_CONFIG.temperature,
@@ -67,19 +86,59 @@ const processMessageWithGPT = async (conversationHistory) => {
       "Posso ajudar"
     ];
     
+    // Verificar se é primeiro contato para personalizar boas-vindas
+    const isFirstContact = conversationHistory.length <= 2;
+    
     // Se a resposta for genérica, adicione contexto específico
     if (genericResponses.some(generic => assistantResponse.includes(generic))) {
       console.log('[OpenAI] ALERTA: Resposta genérica detectada, personalizando');
-      return "Olá! Sou Ana, secretária do consultório do Dr. Reinaldo Ragazzo. Posso ajudar você a agendar, confirmar, remarcar ou cancelar uma consulta. Em que posso ajudar hoje? 😊";
+      
+      if (isFirstContact) {
+        // Primeira mensagem - boas-vindas completas
+        if (patientInfo && patientInfo.name) {
+          return `Olá ${patientInfo.name}! Sou Ana, secretária do consultório do Dr. Reinaldo Ragazzo. Que bom falar com você novamente! Posso ajudar com agendamento, confirmação, remarcação ou cancelamento de consultas. Em que posso ajudar hoje? 😊`;
+        } else {
+          return "Olá! Sou Ana, secretária do consultório do Dr. Reinaldo Ragazzo. Posso ajudar você a agendar, confirmar, remarcar ou cancelar uma consulta. Em que posso ajudar hoje? 😊";
+        }
+      } else {
+        // Mensagem no meio da conversa - mais direto
+        if (patientInfo && patientInfo.name) {
+          return `${patientInfo.name}, como posso ajudar? Precisa agendar, remarcar ou cancelar uma consulta com o Dr. Reinaldo?`;
+        } else {
+          return "Como posso ajudar? Precisa agendar, remarcar ou cancelar uma consulta com o Dr. Reinaldo?";
+        }
+      }
     }
     
-    return assistantResponse;
-  } catch (error) {
-    console.error('Erro ao processar mensagem com GPT-4.5:', error.response?.data || error.message);
-    console.error('Detalhes completos do erro:', error);
+    // Verificar se a resposta contém informações erradas sobre o processo
+    const incorrectPatterns = [
+      { pattern: "ligue para", replacement: "informe seus dados por aqui mesmo" },
+      { pattern: "nosso telefone", replacement: "todos os detalhes por aqui mesmo" },
+      { pattern: "enviar um e-mail", replacement: "informar por aqui mesmo" }
+    ];
     
-    // Retornar uma mensagem de erro genérica em caso de falha
-    return 'Desculpe, estou com dificuldades para processar sua solicitação no momento. Por favor, tente novamente mais tarde.';
+    let correctedResponse = assistantResponse;
+    for (const { pattern, replacement } of incorrectPatterns) {
+      if (correctedResponse.toLowerCase().includes(pattern)) {
+        console.log(`[OpenAI] ALERTA: Resposta contém informação incorreta: "${pattern}"`);
+        correctedResponse = correctedResponse.replace(
+          new RegExp(`([^.!?]*${pattern}[^.!?]*[.!?])`, 'i'), 
+          `Você pode ${replacement}. `
+        );
+      }
+    }
+    
+    if (correctedResponse !== assistantResponse) {
+      console.log('[OpenAI] Resposta corrigida para procedimento correto');
+    }
+    
+    return correctedResponse;
+  } catch (error) {
+    console.error('[OpenAI] Erro ao processar mensagem com GPT-4.5:', error.response?.data || error.message);
+    console.error('[OpenAI] Detalhes completos do erro:', error);
+    
+    // Retornar uma mensagem de erro mais amigável em caso de falha
+    return 'Olá! Sou Ana, a secretária do Dr. Reinaldo. Estou com dificuldades técnicas no momento para processar sua solicitação. Por favor, tente novamente em alguns instantes ou, se preferir, entre em contato pelo telefone (11) 1234-5678. Peço desculpas pelo inconveniente!';
   }
 };
 
