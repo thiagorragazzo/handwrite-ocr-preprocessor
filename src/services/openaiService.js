@@ -178,7 +178,7 @@ const analyzeIntent = async (conversationHistory) => {
           - nome: o nome completo do paciente
           - telefone: número de telefone mencionado
           
-          ATENÇÃO: Responda APENAS com um objeto JSON puro, sem formatação markdown ou explicações. Não use crase (`) ou blocos de código. Apenas o JSON limpo.
+          ATENÇÃO: Responda APENAS com um objeto JSON puro, sem formatação markdown ou explicações. Não use blocos de código. Apenas o JSON limpo.
           Formato esperado:
           {"type": "intenção identificada", "confidence": número, "entities": {"cpf": "12345678901", "data": "2025-03-15", "hora": "14:30", "nome": "Nome Completo", "telefone": "11999998888"}}`
       },
