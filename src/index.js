@@ -70,8 +70,13 @@ app.use((req, res, next) => {
 });
 
 // Aplicar rate limiters
+// Configurar confiança em proxies (necessário para express-rate-limit)
+app.set('trust proxy', 1);
+
+// Aplicar rate limiters
 app.use('/api', apiLimiter);
-app.use('/webhook', webhookLimiter);
+// Desativar temporariamente o limitador para o webhook durante testes
+// app.use('/webhook', webhookLimiter);
 
 // Importar e configurar middleware de conversação
 const { conversationContextMiddleware } = require('./middleware/conversationContext');

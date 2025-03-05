@@ -178,9 +178,9 @@ const analyzeIntent = async (conversationHistory) => {
           - nome: o nome completo do paciente
           - telefone: número de telefone mencionado
           
-          ATENÇÃO: Responda APENAS com um objeto JSON puro, sem formatação markdown ou explicações. Não use blocos de código. Apenas o JSON limpo.
-          Formato esperado:
-          {"type": "intenção identificada", "confidence": número, "entities": {"cpf": "12345678901", "data": "2025-03-15", "hora": "14:30", "nome": "Nome Completo", "telefone": "11999998888"}}`
+          IMPORTANTE: Sua resposta deve ser APENAS um objeto JSON sem nenhuma formatação extra.
+          Exemplo de resposta correta:
+          {"type": "agendar", "confidence": 0.9, "entities": {"nome": "Maria Silva", "data": "2025-03-15", "hora": "14:30"}}`
       },
       {
         role: 'user',
@@ -191,8 +191,9 @@ const analyzeIntent = async (conversationHistory) => {
     console.log('[OpenAI] Enviando requisição para análise de intenção...');
     const response = await openaiClient.post('/chat/completions', {
       model: DEFAULT_MODEL_CONFIG.model,
-      temperature: 0.3, // Reduzindo a temperatura para obter respostas mais determinísticas
+      temperature: 0.1, // Reduzindo mais a temperatura para obter respostas mais determinísticas
       top_p: 0.5,      // Reduzindo top_p para respostas mais focadas no formato solicitado
+      response_format: { type: "json_object" }, // Forçar resposta no formato JSON
       n: 1,
       messages
     });

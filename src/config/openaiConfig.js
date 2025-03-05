@@ -14,10 +14,10 @@ const openaiClient = axios.create({
   }
 });
 
-// Configuração para o modelo GPT-4.5
+// Configuração para o modelo GPT-4o
 // Nota: apenas parâmetros válidos para a API
 const DEFAULT_MODEL_CONFIG = {
-  model: 'gpt-4.5-preview',
+  model: 'gpt-4o',
   temperature: 0.5,  // Reduzido para tornar as respostas mais consistentes e focadas
   top_p: 0.8,      // Ligeiramente reduzido para maior consistência
   n: 1
