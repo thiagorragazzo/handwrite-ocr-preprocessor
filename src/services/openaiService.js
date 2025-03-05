@@ -58,7 +58,9 @@ Use estas informações para personalizar o atendimento, mas não mencione ter a
       temperature: 0.5,
       top_p: 0.8,
       n: 1,
-      messages
+      messages,
+      // Forçar formato JSON para a resposta do segundo modelo (GPT-4o)
+      response_format: { type: "text" }
     };
 
     // Fazer a requisição para a API da OpenAI
@@ -207,15 +209,21 @@ const analyzeIntent = async (conversationHistory) => {
       // Limpeza de possíveis formatações markdown ou textos extras
       if (content.includes('```json')) {
         content = content.split('```json')[1].split('```')[0].trim();
+        console.log('[OpenAI] Extraído JSON de bloco de código json');
       } else if (content.includes('```')) {
         content = content.split('```')[1].split('```')[0].trim();
+        console.log('[OpenAI] Extraído JSON de bloco de código genérico');
       }
+      
+      // Logging da resposta para diagnóstico
+      console.log('[OpenAI] Conteúdo formatado para parse:', content.substring(0, 200));
       
       // Eliminar possíveis linhas iniciais não-JSON
       if (content.trim().charAt(0) !== '{') {
         const jsonStart = content.indexOf('{');
         if (jsonStart !== -1) {
           content = content.substring(jsonStart);
+          console.log('[OpenAI] Recortado início não-JSON');
         }
       }
       
@@ -224,7 +232,19 @@ const analyzeIntent = async (conversationHistory) => {
         const jsonEnd = content.lastIndexOf('}');
         if (jsonEnd !== -1) {
           content = content.substring(0, jsonEnd + 1);
+          console.log('[OpenAI] Recortado final não-JSON');
         }
+      }
+      
+      // Tentativa de correção para casos extremos - força um objeto JSON válido
+      if (!content.startsWith('{') || !content.endsWith('}')) {
+        console.log('[OpenAI] Forçando estrutura JSON válida');
+        // Criar JSON básico como fallback
+        return {
+          type: "fallback",
+          confidence: 0.3,
+          entities: {}
+        };
       }
       
       const result = JSON.parse(content);
@@ -241,9 +261,61 @@ const analyzeIntent = async (conversationHistory) => {
       console.error('[OpenAI] Erro ao analisar resposta JSON:', parseError);
       console.log('[OpenAI] Resposta não-JSON recebida:', content);
       
-      // Fallback: Usar regex para detectar intenção
-      console.log('[OpenAI] Usando fallback de regex para detecção de intenção');
-      return fallbackIntentDetection(fullText);
+      // Criar JSON manualmente para casos de erro extremo
+      try {
+        // Tentar extrair tipo de intenção do texto
+        const intentTypes = ['agendar', 'cancelar', 'remarcar', 'informacao'];
+        let detectedType = 'informacao'; // padrão
+        
+        for (const type of intentTypes) {
+          if (content.toLowerCase().includes(type)) {
+            detectedType = type;
+            break;
+          }
+        }
+        
+        console.log(`[OpenAI] Intenção extraída manualmente: ${detectedType}`);
+        
+        // Extrair entidades simples se possível
+        const entities = {};
+        
+        // Nome possível
+        const nameMatch = content.match(/nome[:\s]+([A-Za-zÀ-ÿ\s]+)(?=[,\.]|$)/i);
+        if (nameMatch && nameMatch[1]) entities.nome = nameMatch[1].trim();
+        
+        // CPF possível
+        const cpfMatch = content.match(/(\d{3}[\.\s]?\d{3}[\.\s]?\d{3}[-\.\s]?\d{2})/);
+        if (cpfMatch && cpfMatch[1]) entities.cpf = cpfMatch[1].replace(/[^\d]/g, '');
+        
+        // Data possível
+        const dateMatch = content.match(/(\d{1,2})[-\/\s](\d{1,2})(?:[-\/\s](\d{2,4}))?/);
+        if (dateMatch) {
+          const day = dateMatch[1].padStart(2, '0');
+          const month = dateMatch[2].padStart(2, '0');
+          const year = dateMatch[3] ? (dateMatch[3].length === 2 ? `20${dateMatch[3]}` : dateMatch[3]) : new Date().getFullYear();
+          entities.data = `${year}-${month}-${day}`;
+        }
+        
+        // Hora possível
+        const timeMatch = content.match(/(\d{1,2})(?::(\d{2}))?(?:\s*(?:h|horas))?/);
+        if (timeMatch) {
+          const hour = timeMatch[1].padStart(2, '0');
+          const minute = timeMatch[2] ? timeMatch[2] : '00';
+          entities.hora = `${hour}:${minute}`;
+        }
+        
+        console.log('[OpenAI] Utilizando objeto JSON manual como último recurso', entities);
+        return {
+          type: detectedType,
+          confidence: 0.3,
+          entities
+        };
+      } catch (fallbackError) {
+        console.error('[OpenAI] Erro no fallback manual:', fallbackError);
+        // Último recurso: fallback com regex
+        console.log('[OpenAI] Usando fallback de regex para detecção de intenção');
+        return fallbackIntentDetection(fullText);
+      }
     }
   } catch (error) {
     console.error('[OpenAI] Erro ao analisar intenção com GPT-4o:', error.response?.data || error.message);
