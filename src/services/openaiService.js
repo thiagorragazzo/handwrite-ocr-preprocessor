@@ -50,21 +50,21 @@ Use estas informações para personalizar o atendimento, mas não mencione ter a
       });
     });
 
-    console.log(`[OpenAI] Preparadas ${messages.length} mensagens para envio ao GPT-4.5`);
+    console.log(`[OpenAI] Preparadas ${messages.length} mensagens para envio ao GPT-4o`);
     
     // Configuração para a requisição 
     const requestConfig = {
-      model: DEFAULT_MODEL_CONFIG.model,
-      temperature: DEFAULT_MODEL_CONFIG.temperature,
-      top_p: DEFAULT_MODEL_CONFIG.top_p,
-      n: DEFAULT_MODEL_CONFIG.n,
+      model: "gpt-4o", // Forçar explicitamente o modelo
+      temperature: 0.5,
+      top_p: 0.8,
+      n: 1,
       messages
     };
 
     // Fazer a requisição para a API da OpenAI
-    console.log('[OpenAI] Enviando requisição para GPT-4.5-preview...');
+    console.log('[OpenAI] Enviando requisição para GPT-4o...');
     const response = await openaiClient.post('/chat/completions', requestConfig);
-    console.log('[OpenAI] Resposta recebida do GPT-4.5-preview');
+    console.log('[OpenAI] Resposta recebida do GPT-4o');
 
     // Extrair o texto da resposta
     const assistantResponse = response.data.choices[0].message.content;
@@ -190,7 +190,7 @@ const analyzeIntent = async (conversationHistory) => {
 
     console.log('[OpenAI] Enviando requisição para análise de intenção...');
     const response = await openaiClient.post('/chat/completions', {
-      model: DEFAULT_MODEL_CONFIG.model,
+      model: "gpt-4o", // Forçar explicitamente o modelo
       temperature: 0.1, // Reduzindo mais a temperatura para obter respostas mais determinísticas
       top_p: 0.5,      // Reduzindo top_p para respostas mais focadas no formato solicitado
       response_format: { type: "json_object" }, // Forçar resposta no formato JSON
@@ -246,7 +246,7 @@ const analyzeIntent = async (conversationHistory) => {
       return fallbackIntentDetection(fullText);
     }
   } catch (error) {
-    console.error('[OpenAI] Erro ao analisar intenção com GPT-4.5:', error.response?.data || error.message);
+    console.error('[OpenAI] Erro ao analisar intenção com GPT-4o:', error.response?.data || error.message);
     
     // Em caso de erro na API, usar o fallback de regex
     console.log('[OpenAI] Usando fallback de regex devido a erro na API');
