@@ -6,7 +6,8 @@ const morgan = require('morgan');
 const path = require('path');
 const rateLimit = require('express-rate-limit');
 const { initializeDatabase, setupMaintenanceTasks } = require('./config/db');
-const { initCalendarClient } = require('./services/calendarService');
+// Importar apenas as funções que existem no arquivo
+const { isCalendarClientInitialized } = require('./config/googleCalendar');
 
 // Configuração do sistema de logging
 const fs = require('fs');
@@ -116,9 +117,13 @@ async function startServer() {
     console.log('[Startup] Configurando tarefas de manutenção...');
     setupMaintenanceTasks();
     
-    // Inicializar cliente do Google Calendar
-    console.log('[Startup] Inicializando cliente do Google Calendar...');
-    await initCalendarClient();
+    // Verificar se o cliente do Google Calendar está inicializado
+    console.log('[Startup] Verificando cliente do Google Calendar...');
+    if (!isCalendarClientInitialized()) {
+      console.warn('[Startup] AVISO: Cliente do Google Calendar não inicializado corretamente');
+    } else {
+      console.log('[Startup] Cliente do Google Calendar verificado com sucesso');
+    }
 
     // Iniciar o servidor
     app.listen(PORT, () => {
