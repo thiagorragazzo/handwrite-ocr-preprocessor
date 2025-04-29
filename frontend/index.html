@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Handwriting Pre-Processor</title>
+<style>
+  body{font-family:sans-serif;padding:2rem;max-width:800px;margin:0 auto;line-height:1.6}
+  #preview{display:block;margin-top:1rem;max-width:100%;border:1px solid #ccc}
+  .container{margin-top:2rem}
+  button{padding:8px 16px;background:#4285f4;color:white;border:none;border-radius:4px;cursor:pointer}
+  button:hover{background:#2b6de8}
+  input[type="file"]{margin-right:10px}
+  .status{margin-top:10px;color:#666}
+</style>
+</head>
+<body>
+  <h1>Handwriting Pre-Processor</h1>
+  <p>Upload a handwritten image to enhance it for OCR processing.</p>
+  
+  <div class="container">
+    <input type="file" id="fileInput" accept="image/*">
+    <button id="sendBtn">Process</button>
+    <div class="status" id="status"></div>
+  </div>
+  
+  <div class="container">
+    <h3>Processed Image:</h3>
+    <img id="preview" alt="Processed image will appear here" style="display:none">
+  </div>
+
+<script>
+document.getElementById('sendBtn').onclick = async () => {
+  const file = document.getElementById('fileInput').files[0];
+  if(!file) return alert('Choose an image first!');
+  
+  const statusEl = document.getElementById('status');
+  const previewEl = document.getElementById('preview');
+  
+  statusEl.textContent = 'Processing...';
+  
+  try {
+    // Use porta 8001 se a 8000 estiver ocupada
+    const serverUrl = 'http://localhost:8001/process';
+    const fd = new FormData(); 
+    fd.append('file', file);
+    
+    const res = await fetch(serverUrl, {
+      method: 'POST', 
+      body: fd
+    });
+    
+    if(!res.ok) {
+      throw new Error(`Server error: ${res.status}`);
+    }
+    
+    const blob = await res.blob();
+    previewEl.src = URL.createObjectURL(blob);
+    previewEl.style.display = 'block';
+    statusEl.textContent = 'Image processed successfully!';
+  } catch (error) {
+    statusEl.textContent = `Error: ${error.message}. Make sure the server is running on port 8001.`;
+    console.error(error);
+  }
+};
+</script>
+</body>
+</html>
