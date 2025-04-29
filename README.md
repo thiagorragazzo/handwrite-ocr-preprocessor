@@ -1,31 +1,31 @@
 # Handwriting OCR Pre-Processor
 
-Aplicativo completo para pré-processamento de imagens de escrita manual, preparando-as para OCR (Reconhecimento Óptico de Caracteres).
+A complete application for preprocessing handwritten text images to prepare them for OCR (Optical Character Recognition).
 
-## 📋 Funcionalidades
+## 📋 Features
 
-- Conversão para escala de cinza
-- Equalização de histograma CLAHE
-- Desfoque gaussiano (redução de ruído)
-- Limiarização adaptativa (binarização)
-- Correção de inclinação (rotação automática)
-- Saída em PNG otimizado
+- Grayscale conversion
+- CLAHE histogram equalization
+- Gaussian blur (noise reduction)
+- Adaptive thresholding (binarization)
+- Deskewing (automatic rotation correction)
+- Optimized PNG output
 
-## 🚀 Execução simplificada
+## 🚀 Quick Start
 
-Execute apenas um comando:
+Run with a single command:
 
 ```bash
 ./start.sh
 ```
 
-Este script cuida de:
-1. Criar o ambiente virtual Python
-2. Instalar as dependências
-3. Iniciar o servidor backend
-4. Abrir o frontend no navegador
+This script takes care of:
+1. Creating the Python virtual environment
+2. Installing dependencies
+3. Starting the backend server
+4. Opening the frontend in your browser
 
-## 📦 Execução manual
+## 📦 Manual Setup
 
 ### Backend (FastAPI + OpenCV)
 
@@ -39,19 +39,19 @@ uvicorn main:app --reload --port 8001
 
 ### Frontend
 
-Abra o arquivo `frontend/index.html` no seu navegador após iniciar o backend.
+Open the `frontend/index.html` file in your browser after starting the backend.
 
-## 🔧 Requisitos
+## 🔧 Requirements
 
-- Python 3.6 ou superior
-- Navegador web moderno
+- Python 3.6 or higher
+- Modern web browser
 
-## 📝 Notas
+## 📝 Notes
 
-- API Swagger disponível em: http://localhost:8001/docs
-- O processamento é feito totalmente local, sem dependências externas
-- Ideal para melhorar imagens antes de usar serviços de OCR
+- Swagger API documentation available at: http://localhost:8001/docs
+- Processing is done entirely locally, with no external dependencies
+- Ideal for improving images before using OCR services
 
 ---
 
-Desenvolvido com FastAPI, OpenCV e tecnologias web padrão.
+Developed with FastAPI, OpenCV and standard web technologies.

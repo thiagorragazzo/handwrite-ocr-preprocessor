@@ -39,7 +39,7 @@ document.getElementById('sendBtn').onclick = async () => {
   statusEl.textContent = 'Processing...';
   
   try {
-    // Use porta 8001 se a 8000 estiver ocupada
+    // Use port 8001 if 8000 is already in use
     const serverUrl = 'http://localhost:8001/process';
     const fd = new FormData(); 
     fd.append('file', file);

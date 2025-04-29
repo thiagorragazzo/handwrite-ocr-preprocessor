@@ -1,8 +1,8 @@
 # Handwriting OCR Pre-Processor Frontend
 
-## Como usar
+## How to Use
 
-1. Certifique-se que o backend está rodando primeiro:
+1. Make sure the backend is running first:
    ```bash
    cd ../backend
    python3 -m venv .venv
@@ -11,14 +11,14 @@
    uvicorn main:app --reload --port 8001
    ```
 
-2. Abra o arquivo `index.html` no seu navegador
+2. Open the `index.html` file in your browser
 
-3. Faça upload de uma imagem com escrita manual
+3. Upload an image with handwritten text
 
-4. Clique em "Process" para processar a imagem
+4. Click "Process" to process the image
 
-5. A imagem processada aparecerá abaixo
+5. The processed image will appear below
 
-## Configuração
+## Configuration
 
-O frontend está configurado para se conectar ao backend na porta 8001. Se você estiver usando uma porta diferente, edite a linha `const serverUrl = 'http://localhost:8001/process';` no arquivo index.html.
+The frontend is configured to connect to the backend on port 8001. If you're using a different port, edit the line `const serverUrl = 'http://localhost:8001/process';` in the index.html file.

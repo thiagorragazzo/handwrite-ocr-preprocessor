@@ -1,35 +1,35 @@
 #!/bin/bash
 
-echo "🚀 Inicializando Handwriting OCR Pre-Processor"
+echo "🚀 Initializing Handwriting OCR Pre-Processor"
 
-# Ir para o diretório backend
+# Go to the backend directory
 cd "$(dirname "$0")/backend"
 
-# Criar e ativar ambiente virtual se não existir
+# Create and activate virtual environment if it doesn't exist
 if [ ! -d ".venv" ]; then
-  echo "📦 Criando ambiente virtual..."
+  echo "📦 Creating virtual environment..."
   python3 -m venv .venv
 fi
 
-# Ativar ambiente virtual
-echo "🔌 Ativando ambiente virtual..."
+# Activate virtual environment
+echo "🔌 Activating virtual environment..."
 source .venv/bin/activate
 
-# Instalar dependências
-echo "📚 Instalando dependências..."
+# Install dependencies
+echo "📚 Installing dependencies..."
 pip install -r requirements.txt
 
-# Iniciar servidor FastAPI em segundo plano
-echo "🌐 Iniciando servidor FastAPI na porta 8001..."
+# Start FastAPI server in the background
+echo "🌐 Starting FastAPI server on port 8001..."
 uvicorn main:app --reload --port 8001 &
 SERVER_PID=$!
 
-# Aguardar o servidor iniciar
-echo "⏳ Aguardando servidor iniciar..."
+# Wait for the server to start
+echo "⏳ Waiting for server to start..."
 sleep 3
 
-# Abrir o frontend no navegador padrão
-echo "🖥️ Abrindo frontend no navegador..."
+# Open the frontend in the default browser
+echo "🖥️ Opening frontend in browser..."
 if [[ "$OSTYPE" == "darwin"* ]]; then
   # macOS
   open "../frontend/index.html"
@@ -42,12 +42,12 @@ elif [[ "$OSTYPE" == "msys" || "$OSTYPE" == "win32" ]]; then
 fi
 
 echo ""
-echo "✅ Aplicativo iniciado! Pressione Ctrl+C para encerrar."
+echo "✅ Application started! Press Ctrl+C to exit."
 echo "   - Backend: http://localhost:8001/docs"
-echo "   - Frontend: Aberto no navegador"
+echo "   - Frontend: Opened in browser"
 
-# Capturar Ctrl+C para encerrar o servidor em segundo plano
-trap "kill $SERVER_PID; echo '👋 Aplicativo encerrado!'; exit" SIGINT
+# Capture Ctrl+C to terminate the background server
+trap "kill $SERVER_PID; echo '👋 Application terminated!'; exit" SIGINT
 
-# Manter o script rodando
+# Keep the script running
 wait $SERVER_PID
