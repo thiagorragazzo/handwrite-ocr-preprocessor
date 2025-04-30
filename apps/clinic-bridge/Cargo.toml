@@ -1,0 +1,57 @@
+[package]
+name = "clinic-bridge"
+version = "0.1.0"
+edition = "2021"
+description = "Micro-serviço de integração entre módulos do ecossistema da clínica"
+authors = ["Clinica Medical Team <dev@clinica.med.br>"]
+
+[dependencies]
+# Web Framework
+axum = "0.6"
+tokio = { version = "1", features = ["full"] }
+tower = { version = "0.4", features = ["limit"] }
+tower-http = { version = "0.4", features = ["trace", "cors", "compression-full"] }
+
+# Database
+sqlx = { version = "0.7", features = ["runtime-tokio-rustls", "sqlite", "chrono", "uuid", "json"] }
+uuid = { version = "1.3", features = ["v4", "serde"] }
+
+# Serialization & Validation
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+validator = { version = "0.16", features = ["derive"] }
+
+# Crypto
+chacha20poly1305 = "0.10"
+argon2 = "0.5"
+hmac = "0.12"
+sha2 = "0.10"
+rand = "0.8"
+
+# Logging & Metrics
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
+
+# Error Handling
+anyhow = "1.0"
+thiserror = "1.0"
+
+# Authentication
+jsonwebtoken = "8.3"
+
+# Internal Packages
+common-db = { path = "../../packages/common-db" }
+common-auth = { path = "../../packages/common-auth", optional = true }
+
+[dev-dependencies]
+tokio-test = "0.4"
+mockall = "0.11"
+wiremock = "0.5"
+
+[features]
+default = []
+auth = ["common-auth"]
+test-utils = []
+
+[build-dependencies]
+built = "0.6"
